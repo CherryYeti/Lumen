@@ -1,0 +1,41 @@
+plugins {
+    id 'com.android.application' version '9.4.1' apply false
+}
+
+// Release signing for both apps, from keystore.properties (not in the repo):
+//   storeFile=/path/to/lumen-release.jks
+//   storePassword=...
+//   keyAlias=lumen
+//   keyPassword=...
+// Without it, assembleRelease still builds, but the APKs are unsigned.
+def keystoreFile = file('keystore.properties')
+def keystore = new Properties()
+if (keystoreFile.exists())
+    keystoreFile.withInputStream { keystore.load(it) }
+
+subprojects {
+    plugins.withId('com.android.application') {
+        // Lumen's GPL text ships inside every APK (GPLv3 section 4).
+        def licenseAssets = layout.buildDirectory.dir('licenseAssets').get().asFile
+        copy {
+            from(rootProject.file('../LICENSE')) { rename { 'LICENSE-Lumen.txt' } }
+            into "${licenseAssets}/licenses"
+        }
+        android {
+            sourceSets {
+                main.assets.srcDirs += licenseAssets
+            }
+            if (keystoreFile.exists()) {
+                signingConfigs {
+                    release {
+                        storeFile = file(keystore.getProperty('storeFile'))
+                        storePassword = keystore.getProperty('storePassword')
+                        keyAlias = keystore.getProperty('keyAlias')
+                        keyPassword = keystore.getProperty('keyPassword')
+                    }
+                }
+                buildTypes.release.signingConfig = signingConfigs.release
+            }
+        }
+    }
+}

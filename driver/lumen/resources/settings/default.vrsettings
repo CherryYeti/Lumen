@@ -1,0 +1,20 @@
+{
+    "driver_lumen": {
+        "enable": true,
+        "serialNumber": "LUMEN-0001",
+        "modelNumber": "Lumen Phone HMD",
+        "posePort": 9944,
+        "windowX": 0,
+        "windowY": 0,
+        "windowWidth": 1920,
+        "windowHeight": 1080,
+        "renderWidth": 1200,
+        "renderHeight": 1350,
+        "fovDegrees": 95.0,
+        "ipdMeters": 0.063,
+        "headHeightMeters": 1.6,
+        "displayFrequency": 60.0,
+        "secondsFromVsyncToPhotons": 0.011,
+        "gazePointer": true
+    }
+}

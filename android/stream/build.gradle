@@ -1,0 +1,19 @@
+// Video stream receiving and decoding, shared by the phone app (:app) and the
+// Gear VR app (:gearvr).
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    namespace = 'com.lumen.stream'
+    compileSdk = 36
+
+    defaultConfig {
+        minSdk = 26
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}

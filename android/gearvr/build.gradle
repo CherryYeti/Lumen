@@ -1,0 +1,74 @@
+// Lumen client for the Samsung Gear VR, on Oculus VrApi (Mobile SDK 1.26.0,
+// the last with Gear VR support). The SDK stays outside the repo; point
+// ovr.sdk.dir in local.properties at it.
+plugins {
+    id 'com.android.application'
+}
+
+def localProps = new Properties()
+def localFile = rootProject.file('local.properties')
+if (localFile.exists())
+    localFile.withInputStream { localProps.load(it) }
+def ovrSdk = localProps.getProperty('ovr.sdk.dir', "${System.getProperty('user.home')}/SDKs/ovr_sdk_mobile_1.26.0")
+
+// libvrapi.so (the loader for the phone's Oculus runtime) ships in the APK.
+// jniLibs wants <abi>/lib.so; the SDK has <abi>/Release/lib.so.
+def vrapiLibs = layout.buildDirectory.dir('vrapiLibs').get().asFile
+copy {
+    from("${ovrSdk}/VrApi/Libs/Android/arm64-v8a/Release") { include 'libvrapi.so' }
+    into "${vrapiLibs}/arm64-v8a"
+}
+
+// The Oculus SDK License requires its license text, which carries Meta's
+// copyright notice, to go with any copy of SDK code (sections 2.2-2.4).
+def sdkAssets = layout.buildDirectory.dir('sdkAssets').get().asFile
+copy {
+    from("${ovrSdk}/LICENSE.txt") { rename { 'LICENSE-Oculus-SDK.txt' } }
+    into "${sdkAssets}/licenses"
+}
+
+android {
+    namespace = 'com.lumen.gearvr'
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = 'com.lumen.gearvr'
+        minSdk = 26
+        targetSdk = 26 // what Gear VR's runtime era expected
+        versionCode = 1
+        versionName = '0.1'
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+        externalNativeBuild {
+            cmake {
+                arguments "-DOVR_SDK_DIR=${ovrSdk}"
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path = file('src/main/cpp/CMakeLists.txt')
+        }
+    }
+
+    sourceSets {
+        main.jniLibs.srcDirs += vrapiLibs
+        main.assets.srcDirs += sdkAssets
+    }
+
+    lint {
+        // Play's minimum target SDK doesn't apply: this APK is sideloaded.
+        disable 'ExpiredTargetSdkVersion'
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation project(':stream')
+}
